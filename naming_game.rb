@@ -1,15 +1,43 @@
 require 'set'
 
 class Word
-  @@count = 0
+  attr_accessor :references
+
+  @@count  = 0
+  @@all    = []
+
   def self.count
     @@count
   end
 
-  def self.get_new_one
+  def self.all
+    @@all
+  end
+
+  def self.active
+    @@all.select { |w| w.references > 0 }
+  end
+
+  def initialize
     @@count += 1
+    @references = 0
+    @id = @@count
+    @@all << self
+  end
+
+  def ==(other)
+    self.id == other.id
+  end
+
+  def add_reference
+    @references += 1
+  end
+
+  def remove_reference
+    @references -= 1
   end
 end
+
 
 class Node
   def neighbors
@@ -29,7 +57,7 @@ class Player
 
   def pick_random_word
     if @words.empty?
-      @words << Word.get_new_one
+      self.add_word Word.new
     end
 
     @words.sample
@@ -40,11 +68,15 @@ class Player
   end
 
   def drop_all_but(w)
+    @words.each do |word|
+      word.remove_reference unless word == w
+    end
     @words = [w]
   end
 
   def add_word(w)
     @words << w
+    w.add_reference
   end
 
   def speak_to(listener)
@@ -98,12 +130,13 @@ class Game
     q = (@players - [p]).sample
     p.speak_to q
 
-    @iterations += 1
-    num_words = self.all_words.size
-    if num_words > @max_words
-      @max_words = num_words
-      @time_to_max_words = @iterations
-    end
+    puts Word.all.map { |w| [w.id, w.references] }.to_s
+    # @iterations += 1
+    # num_words = self.all_words.size
+    # if num_words > @max_words
+    #   @max_words = num_words
+    #   @time_to_max_words = @iterations
+    # end
   end
 
   def report_results
@@ -115,4 +148,5 @@ class Game
   end
 end
 
-Benchmark.bm { |x| x.report { Game.run 1000 } }
+# Benchmark.bm { |x| x.report { Game.run } }
+Game.run 10
