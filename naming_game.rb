@@ -1,28 +1,27 @@
 require 'set'
+require 'benchmark'
 
 class Word
-  attr_accessor :references
+  class << self
+    attr_accessor :count, :all
 
-  @@count  = 0
-  @@all    = []
+    def active
+      self.all.select { |w| w.references > 0 }
+    end
 
-  def self.count
-    @@count
+    def reset
+      self.count = 0
+      self.all   = []
+    end
   end
 
-  def self.all
-    @@all
-  end
-
-  def self.active
-    @@all.select { |w| w.references > 0 }
-  end
+  attr_accessor :references, :id
 
   def initialize
-    @@count += 1
+    Word.count += 1
+    Word.all << self
+    @id = Word.count
     @references = 0
-    @id = @@count
-    @@all << self
   end
 
   def ==(other)
@@ -82,10 +81,12 @@ class Player
   def speak_to(listener)
     w = self.pick_random_word
     if listener.has_word? w
+
       # success
       self.drop_all_but w
       listener.drop_all_but w
     else
+
       # failure
       listener.add_word w
     end
@@ -95,20 +96,11 @@ end
 class Game
   attr_accessor :players, :iterations
 
-  class << self
-    def run(n = 100)
-      game = Game.new n
-      until game.stop_condition?
-        game.iterate
-      end
-      game.report_results
-    end
-  end
-
   def initialize(n = 100)
     @players    = []
     @iterations = 0
     @max_words  = 0
+    @num_words  = 0
     @time_to_max_words = 0
 
     (1..n).each do |i|
@@ -121,8 +113,7 @@ class Game
   end
 
   def stop_condition?
-    @players.map { |x| x.words.size == 1 }.all? and self.all_words.size == 1
-    # @players.map { |x| x.words.size == 1 }.all? and @num_words == 1
+    @active_words == 1 and Word.active.first.references == @players.size
   end
 
   def iterate
@@ -130,23 +121,32 @@ class Game
     q = (@players - [p]).sample
     p.speak_to q
 
-    puts Word.all.map { |w| [w.id, w.references] }.to_s
-    # @iterations += 1
-    # num_words = self.all_words.size
-    # if num_words > @max_words
-    #   @max_words = num_words
-    #   @time_to_max_words = @iterations
-    # end
+    @iterations += 1
+    @active_words = Word.active.count
+
+    if @active_words > @max_words
+      @max_words = @active_words
+      @time_to_max_words = @iterations
+    end
+  end
+
+  def run
+    Word.reset
+    until self.stop_condition?
+      self.iterate
+    end
+    self.report_results
   end
 
   def report_results
     {
-      words:       Word.count,
+      max_words:   @max_words,
       iterations:  @iterations,
-      convergence: self.all_words.to_a.first
+      convergence: self.all_words.to_a.first,
+      time_to_max_words: @time_to_max_words
     }
   end
 end
 
-# Benchmark.bm { |x| x.report { Game.run } }
-Game.run 10
+# game = Game.new; game.run
+Benchmark.bm { |x| x.report { game = Game.new; puts game.run } }
