@@ -18,10 +18,10 @@ class Word
   attr_accessor :references, :id
 
   def initialize
-    Word.count += 1
-    Word.all << self
     @id = Word.count
     @references = 0
+    Word.count += 1
+    Word.all << self
   end
 
   def ==(other)
@@ -37,21 +37,22 @@ class Word
   end
 end
 
-
-class Node
-  def neighbors
-  end
-
-  def random_neighbor
-    neighbors.sample
-  end
-end
-
 class Player
-  attr_accessor :words
+
+  class << self
+    attr_accessor :count
+
+    def reset
+      self.count = 0
+    end
+  end
+
+  attr_accessor :id, :words
 
   def initialize
+    @id = Player.count
     @words = []
+    Player.count += 1
   end
 
   def pick_random_word
@@ -97,11 +98,13 @@ class Game
   attr_accessor :players, :iterations
 
   def initialize(n = 100)
+    Player.reset
     @players    = []
     @iterations = 0
     @max_words  = 0
     @num_words  = 0
     @time_to_max_words = 0
+    @network = Network.new
 
     (1..n).each do |i|
       @players << Player.new
@@ -117,8 +120,9 @@ class Game
   end
 
   def iterate
-    p = @players.sample
-    q = (@players - [p]).sample
+    # p = @players.sample
+    # q = (@players - [p]).sample
+    p, q = pick_players
     p.speak_to q
 
     @iterations += 1
@@ -145,6 +149,66 @@ class Game
       convergence: self.all_words.to_a.first,
       time_to_max_words: @time_to_max_words
     }
+  end
+
+  protected
+  def pick_players
+    speaker_id = @network.pick_player
+    listener_id = @network.pick_neighbor_from(speaker_id)
+    puts speaker_id, listener_id
+    [@players[speaker_id], @players[listener_id]]
+  end
+end
+
+class Network
+  attr_accessor :n, :p, :adjacency_list
+
+  def initialize(n = 100, p = 0.05)
+    @n = n
+    @p = p
+    make_adjacency_list
+  end
+
+  def pick_player
+    rand(@n)
+  end
+
+  def pick_neighbor_from(node_id)
+    @adjacency_list[node_id].sample
+  end
+
+  # protected
+  def make_adjacency_list
+    @adjacency_list = []
+
+    (0 .. @n - 1).each do |node_id|
+      @adjacency_list[node_id] ||= []
+
+      (node_id + 1 .. @n - 1).each do |neighbor_id|
+        next if node_id == neighbor_id
+        if rand < @p
+          @adjacency_list[neighbor_id] ||= []
+          @adjacency_list[node_id] << neighbor_id
+          @adjacency_list[neighbor_id] << node_id
+          # puts "sucesso: #{node_id} e #{neighbor_id}"
+          # puts "node: #{@adjacency_list[node_id].to_s}"
+          # puts "neighbor: #{@adjacency_list[neighbor_id].to_s}"
+        end
+      end
+    end
+  end
+
+  def is_connected?
+    visited = [false] * @n
+    stack = [0]
+
+    until stack.empty?
+      node = stack.pop
+      visited[node] = true
+      stack.push *@adjacency_list[node].select { |neighbor| !visited[neighbor] }
+    end
+
+    visited.all?
   end
 end
 
