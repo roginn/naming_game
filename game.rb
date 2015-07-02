@@ -1,14 +1,14 @@
 class Game
   attr_accessor :players, :iterations
 
-  def initialize(n = 100)
+  def initialize(n = 100, p = 0.05)
     Player.reset
     @players    = []
     @iterations = 0
     @max_words  = 0
     @num_words  = 0
     @time_to_max_words = 0
-    @network = Network.new
+    @network = Network.new(n, p)
 
     (1..n).each do |i|
       @players << Player.new
