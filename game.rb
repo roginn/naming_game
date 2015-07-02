@@ -33,6 +33,7 @@ class Game
 
     @iterations += 1
     @active_words = Word.active.count
+    # puts Word.active.map { |x| x.references }.to_s if @active_words < 6
 
     if @active_words > @max_words
       @max_words         = @active_words

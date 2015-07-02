@@ -1,4 +1,4 @@
-class ScaleFreeNetwork < Network
+class LatticeNetwork < Network
   def initialize(n = 100)
     @size = n
     make_adjacency_list
