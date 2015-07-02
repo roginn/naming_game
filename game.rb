@@ -1,16 +1,20 @@
 class Game
   attr_accessor :players, :iterations
 
-  def initialize(n = 100, p = 0.05)
-    Player.reset
-    @players    = []
-    @iterations = 0
-    @max_words  = 0
-    @num_words  = 0
+  def initialize(network)
+    @network           = network
+    @iterations        = 0
+    @max_words         = 0
+    @num_words         = 0
     @time_to_max_words = 0
-    @network = Network.new(n, p)
 
-    (1..n).each do |i|
+    initialize_players
+  end
+
+  def initialize_players
+    Player.reset
+    @players = []
+    @network.size.times do
       @players << Player.new
     end
   end
@@ -24,8 +28,6 @@ class Game
   end
 
   def iterate
-    # p = @players.sample
-    # q = (@players - [p]).sample
     p, q = pick_players
     p.speak_to q
 
@@ -33,7 +35,7 @@ class Game
     @active_words = Word.active.count
 
     if @active_words > @max_words
-      @max_words = @active_words
+      @max_words         = @active_words
       @time_to_max_words = @iterations
     end
   end
@@ -58,8 +60,8 @@ class Game
   protected
   def pick_players
     speaker_id = @network.pick_player
-    listener_id = @network.pick_neighbor_from(speaker_id)
-    # puts speaker_id, listener_id
+    listener_id = @network.pick_neighbor_of(speaker_id)
+    # puts [speaker_id, listener_id].to_s
     [@players[speaker_id], @players[listener_id]]
   end
 end
