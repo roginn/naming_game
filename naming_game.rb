@@ -8,6 +8,8 @@ load 'network.rb'
 load 'random_network.rb'
 load 'clique_network.rb'
 load 'scale_free_network.rb'
+load 'lattice_network.rb'
+load 'small_world_network.rb'
 
 # Benchmark.bm { |x| x.report { game = Game.new; puts game.run } }
 
@@ -16,13 +18,15 @@ load 'scale_free_network.rb'
 def experiment
   puts "network_size\titeration\tmax_words\titerations\tconvergence\ttime_to_max_words"
   # results = []
-  # [0.05].each do |probability|
-  #   puts "\n" * 3
-  #   puts probability
-  #   puts "\n" * 3
-    (10..100).step(10).each do |network_size|
+  [50].each do |degree|
+    puts "\n" * 3
+    puts degree
+    puts "\n" * 3
+    (200..600).step(100).each do |network_size|
       (1..30).each do |iteration|
-        network = ScaleFreeNetwork.new(network_size)
+        network = SmallWorldNetwork.new(network_size, degree) # 2*degree > network_size
+        # network = LatticeNetwork.new(network_size, degree)
+        # network = ScaleFreeNetwork.new(network_size)
         # network = CliqueNetwork.new(network_size)
         # network = RandomNetwork.new(network_size, probability)
         game = Game.new(network)
@@ -31,7 +35,7 @@ def experiment
         # results << [network_size, iteration, result[:max_words], result[:iterations], result[:convergence].id, result[:time_to_max_words]]
       end
     end
-  # end
+  end
 end
 
 experiment

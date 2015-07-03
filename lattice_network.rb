@@ -1,6 +1,7 @@
 class LatticeNetwork < Network
-  def initialize(n = 100)
+  def initialize(n = 100, degree = 10)
     @size = n
+    @degree = degree
     make_adjacency_list
   end
 
@@ -8,32 +9,15 @@ class LatticeNetwork < Network
   def make_adjacency_list
     @adjacency_list = []
     @size.times { @adjacency_list << [] }
-    degrees = [0] * @size
 
-    m0 = 4
-
-    (0 .. m0 - 1).each do |i|
-      @adjacency_list[i].push *((0 .. m0 - 1).to_a - [i]).to_a
-      degrees[i] = m0 - 1
-    end
-
-    connections = degrees.inject(:+)
-    (3 .. @size - 1).each do |next_node|
-      acc_roulette = degrees.inject([0]) { |acc, x| acc << acc.last + x; acc }.drop(1)
-      r = rand(connections)
-      chosen = nil
-      acc_roulette.each_with_index do |e, i|
-        if e > r
-          chosen = i
-          break
-        end
+    (0 .. @size - 1).each do |next_node|
+      node_list = @adjacency_list[next_node]
+      (1 .. @degree).each do |shift|
+        neighbor = (next_node + shift) % @size
+        neighbor_list = @adjacency_list[neighbor]
+        node_list << neighbor unless node_list.include? neighbor
+        neighbor_list << next_node unless neighbor_list.include? next_node
       end
-
-      @adjacency_list[chosen] << next_node
-      @adjacency_list[next_node] << chosen
-      degrees[chosen] += 1
-      degrees[next_node] += 1
-      connections += 2
-    end
+    end    
   end
 end
