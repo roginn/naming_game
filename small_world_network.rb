@@ -1,7 +1,8 @@
 class SmallWorldNetwork < Network
-  def initialize(n = 100, degree = 10)
+  def initialize(n = 100, degree = 10, rewire_prob = 0.03)
     @size = n
     @degree = degree
+    @rewire_prob = rewire_prob
     make_adjacency_list
   end
 
@@ -20,15 +21,13 @@ class SmallWorldNetwork < Network
       end
     end
 
-    rewire_prob = 0.03
-
     (0 .. @size - 1).each do |node|
       node_list = @adjacency_list[node]
 
       included_neighbors = []
 
       node_list.each do |neighbor|
-        if rand < rewire_prob
+        if rand < @rewire_prob
           next_neighbor = ((0 .. @size - 1).to_a - [node] - node_list).sample
             # puts "#{(0 .. @size - 1).to_a.to_s} - #{[node].to_a.to_s} - #{node_list.to_a.to_s}"
             # puts "next_neighbor: #{next_neighbor}"

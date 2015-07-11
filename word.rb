@@ -12,13 +12,15 @@ class Word
     end
   end
 
-  attr_accessor :references, :id
+  attr_accessor :references, :id, :value
 
-  def initialize
+  def initialize(value = rand)
     @id = Word.count
     @references = 0
+    @value = value
     Word.count += 1
     Word.all << self
+    # puts "created word with value #{@value}"
   end
 
   def ==(other)

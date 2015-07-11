@@ -14,6 +14,7 @@ class Player
     @id = Player.count
     @words = []
     Player.count += 1
+    # puts "created player"
   end
 
   def pick_random_word
@@ -35,6 +36,13 @@ class Player
     @words = [w]
   end
 
+  def drop_all
+    @words.each do |word|
+      word.remove_reference
+    end
+    @words = []
+  end
+
   def add_word(w)
     @words << w
     w.add_reference
@@ -47,10 +55,12 @@ class Player
       # success
       self.drop_all_but w
       listener.drop_all_but w
+      true
     else
 
       # failure
       listener.add_word w
+      false
     end
   end
 end

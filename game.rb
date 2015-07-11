@@ -1,12 +1,10 @@
 class Game
-  attr_accessor :players, :iterations
+  attr_accessor :players, :iteration, :metrics
 
   def initialize(network)
+    @metrics           = Metrics.new(self)
     @network           = network
-    @iterations        = 0
-    @max_words         = 0
-    @num_words         = 0
-    @time_to_max_words = 0
+    @iteration         = 0
 
     initialize_players
   end
@@ -16,6 +14,7 @@ class Game
     @players = []
     @network.size.times do
       @players << Player.new
+      # @players << NumericPlayer.new
     end
   end
 
@@ -24,21 +23,32 @@ class Game
   end
 
   def stop_condition?
-    @active_words == 1 and Word.active.first.references == @players.size
+    @metrics.active_words == 1 and Word.active.first.references == @players.size
+  end
+
+  def debug_players
+    @players.each do |player|
+      puts "player: #{player.id}"
+      puts player.words.map { |w| w.value }.to_s
+    end
+  end
+
+  def debug_words
+    values = Word.active.map { |w| w.value }
+    puts values.inject(:+) / values.size
   end
 
   def iterate
     p, q = pick_players
-    p.speak_to q
+    outcome = p.speak_to q
 
-    @iterations += 1
-    @active_words = Word.active.count
+    @iteration += 1
+    @metrics.update! outcome
     # puts Word.active.map { |x| x.references }.to_s if @active_words < 6
+    # puts Word.active.map { |x| x.value }.to_s
+    # debug_players
+    # debug_words
 
-    if @active_words > @max_words
-      @max_words         = @active_words
-      @time_to_max_words = @iterations
-    end
   end
 
   def run
@@ -51,10 +61,13 @@ class Game
 
   def report_results
     {
-      max_words:   @max_words,
-      iterations:  @iterations,
+      max_words:   @metrics.max_words,
+      iterations:  @iteration,
       convergence: self.all_words.to_a.first,
-      time_to_max_words: @time_to_max_words
+      time_to_max_words: @metrics.time_to_max_words,
+      different_words: @metrics.different_words,
+      total_words: @metrics.total_words,
+      successes: @metrics.successes
     }
   end
 
