@@ -1,20 +1,23 @@
 class Game
   attr_accessor :players, :iteration, :metrics
 
-  def initialize(network)
+  def initialize(network, game_type = :classic)
     @metrics           = Metrics.new(self)
     @network           = network
     @iteration         = 0
 
-    initialize_players
+    initialize_players(game_type)
   end
 
-  def initialize_players
+  def initialize_players(game_type)
     Player.reset
     @players = []
     @network.size.times do
-      @players << Player.new
-      # @players << NumericPlayer.new
+      if game_type == :classic
+        @players << Player.new
+      else
+        @players << NumericPlayer.new
+      end
     end
   end
 
@@ -67,7 +70,8 @@ class Game
       time_to_max_words: @metrics.time_to_max_words,
       different_words: @metrics.different_words,
       total_words: @metrics.total_words,
-      successes: @metrics.successes
+      successes: @metrics.successes,
+      converged_value: Word.active.first.value
     }
   end
 

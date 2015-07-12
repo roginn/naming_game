@@ -1,20 +1,22 @@
 class Word
   class << self
-    attr_accessor :count, :all
+    attr_accessor :count, :all, :by_value
+
 
     def active
       self.all.select { |w| w.references > 0 }
     end
 
     def reset
-      self.count = 0
-      self.all   = []
+      self.count    = 0
+      self.all      = []
+      self.by_value = {}
     end
   end
 
   attr_accessor :references, :id, :value
 
-  def initialize(value = rand)
+  def initialize(value = rand(1000))
     @id = Word.count
     @references = 0
     @value = value
